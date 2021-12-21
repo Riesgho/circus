@@ -1,38 +1,98 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using Code.ScriptableObjects;
+using UniRx;
+using UniRx.Triggers;
 using UnityEngine;
 
 namespace Code.Views
 {
     public class GamePlayView : MonoBehaviour
     {
-        public Action<PlayerInput,PlayerView> GamePlayStart { get; set; }
+        public Action<PlayerInput, PlayerView> GamePlayStart { get; set; }
 
-        
         [SerializeField] private Transform player;
         [SerializeField] private PlayerInput playerInput;
         [SerializeField] private PlayerView playerView;
-        [Range(0.0f, 10f), SerializeField] private float _moveHorizontalValue;
-        [Range(0.0f, 1f), SerializeField] private float offset;
-        private float newPlayerPositionXAxis ;
+        [SerializeField] private LevelGenerator levelGenerator;
+        [SerializeField] private float startPositionHorizontal = -6.5f;
+        [SerializeField] private float startPositionVertical = 0f;
+        [SerializeField] private Camera mainCamera;
+        [SerializeField] private GameObject chunkContainer;
+        [Range(0.0f, 10f), SerializeField] private float moveHorizontalValue;
+        private float _newPlayerPositionXAxis;
+        private float _newCameraPositionXAxis;
+        private List<GameObject> _chunks;
+        private int _previousChunk;
 
         private void Update()
         {
             var position = player.position;
-            newPlayerPositionXAxis = position.x + _moveHorizontalValue * Time.deltaTime;
+            var cameraPosition = mainCamera.transform.position;
+            var moveAmount = moveHorizontalValue * Time.deltaTime;
+            _newPlayerPositionXAxis = position.x + moveAmount;
+            _newCameraPositionXAxis = cameraPosition.x + moveAmount;
         }
 
-    
+        private GameObject CurrentCameraChunk() =>
+            _chunks.First(chunk =>
+                (chunk.transform.position.x - levelGenerator.Width * 0.5f) < _newCameraPositionXAxis - 17.5f*0.5f &&
+                (chunk.transform.position.x + levelGenerator.Width * 0.5f) >= _newCameraPositionXAxis -  17.5f*0.5f );
 
         private void FixedUpdate()
         {
-            player.position = new Vector2(newPlayerPositionXAxis, player.position.y);
+            player.position = new Vector2(_newPlayerPositionXAxis, player.position.y);
+            var mainCameraTransform = mainCamera.transform;
+            var cameraPosition = mainCameraTransform.position;
+            mainCameraTransform.position = new Vector3(_newCameraPositionXAxis, cameraPosition.y, cameraPosition.z);
+            if (_previousChunk == CurrentCameraChunk().GetComponent<ChunkView>().Id) return;
+            UpdateGameplayFor(chunk:_chunks[_previousChunk]);
+            _previousChunk = CurrentCameraChunk().GetComponent<ChunkView>().Id;
         }
 
         public void Initialize()
         {
+            CreateChunks();
+            _newPlayerPositionXAxis = player.position.x;
             gameObject.SetActive(true);
-            newPlayerPositionXAxis = player.position.x;
+            _previousChunk = 0;
             GamePlayStart(playerInput, playerView);
+        }
+
+        private void CreateChunks()
+        {
+            _chunks = Enumerable.Range(0, levelGenerator.AmountOfChunks)
+                .Select(_ => InitializeChunkContainersWithFirstChunks()).ToList();
+            for (var i = 0; i < _chunks.Count; i++)
+            {
+                var chunk = _chunks[i];
+                chunk.transform.position =
+                    new Vector3(startPositionHorizontal + (i * levelGenerator.Width), startPositionVertical);
+                chunk.GetComponent<ChunkView>().Id = i;
+            }
+        }
+
+        private GameObject InitializeChunkContainersWithFirstChunks()
+        {
+            var go = Instantiate(chunkContainer, transform); 
+            AddChunkToContainer(go);
+            return go;
+        }
+
+        private void AddChunkToContainer(GameObject container)
+        {
+            Instantiate(levelGenerator.GetChunk(), container.transform);
+        }
+
+        private void UpdateGameplayFor(GameObject chunk)
+        {
+            chunk.transform.position =
+                new Vector3(chunk.transform.position.x + levelGenerator.TotalWidth,
+                    startPositionVertical);
+            Destroy(chunk.transform.GetChild(0).gameObject); 
+            AddChunkToContainer(chunk);
         }
     }
 }

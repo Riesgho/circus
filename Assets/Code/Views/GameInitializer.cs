@@ -7,14 +7,14 @@ namespace Code.Views
 {
     public class GameInitializer : MonoBehaviour
     {
-        [SerializeField] private StartGameHudView _startGameHudView;
+        [SerializeField] private StartGameHudView startGameHudView;
         [SerializeField] private GamePlayView gamePlayView;
         private void Start()
         {
             var gameStarted = new Subject<Unit>();
-            var startGameHudPresenter = new StartGameHubPresenter(_startGameHudView, gameStarted);
+            var startGameHudPresenter = new StartGameHubPresenter(startGameHudView, gameStarted);
             startGameHudPresenter.Initialize();
-            var gamePlayPresenter = new GamePlay(gamePlayView, gameStarted);
+            var gamePlay = new GamePlay(gamePlayView, gameStarted);
         }
     }
 }
