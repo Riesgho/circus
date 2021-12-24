@@ -12,7 +12,8 @@ namespace Code.Views
     public class GamePlayView : MonoBehaviour
     {
         public Action<PlayerInput, PlayerView> GamePlayStart { get; set; }
-
+        public Action GamePlayFinish { get; set; }
+        
         [SerializeField] private Transform player;
         [SerializeField] private PlayerInput playerInput;
         [SerializeField] private PlayerView playerView;
@@ -27,6 +28,26 @@ namespace Code.Views
         private List<GameObject> _chunks;
         private int _previousChunk;
 
+        public void Initialize()
+        {
+            CreateChunks();
+            SetUp();
+            GamePlayStart(playerInput, playerView);
+        }
+
+        public void Finish()
+        {
+            gameObject.SetActive(false);
+            ClearChunks();
+            mainCamera.transform.position = new Vector3(0, 0, -10);
+            GamePlayFinish();
+        }
+
+        private void ClearChunks()
+        {
+            _chunks.ForEach(Destroy);
+        }
+
         private void Update()
         {
             var position = player.position;
@@ -34,31 +55,56 @@ namespace Code.Views
             var moveAmount = moveHorizontalValue * Time.deltaTime;
             _newPlayerPositionXAxis = position.x + moveAmount;
             _newCameraPositionXAxis = cameraPosition.x + moveAmount;
+            if (HasPlayerCollided(position)) 
+                Finish();
         }
 
-        private GameObject CurrentCameraChunk() =>
-            _chunks.First(chunk =>
-                (chunk.transform.position.x - levelGenerator.Width * 0.5f) < _newCameraPositionXAxis - 17.5f*0.5f &&
-                (chunk.transform.position.x + levelGenerator.Width * 0.5f) >= _newCameraPositionXAxis -  17.5f*0.5f );
+        private bool HasPlayerCollided(Vector3 position) => 
+            HasCollidedWithEndOfCamera(position.x, position.x+0.5f, _newCameraPositionXAxis - 17.5f * 0.5f);
 
         private void FixedUpdate()
         {
             player.position = new Vector2(_newPlayerPositionXAxis, player.position.y);
-            var mainCameraTransform = mainCamera.transform;
-            var cameraPosition = mainCameraTransform.position;
-            mainCameraTransform.position = new Vector3(_newCameraPositionXAxis, cameraPosition.y, cameraPosition.z);
-            if (_previousChunk == CurrentCameraChunk().GetComponent<ChunkView>().Id) return;
-            UpdateGameplayFor(chunk:_chunks[_previousChunk]);
+            MoveCamera();
+            if (HasCameraGotANewChunk()) return;
+            UpdateGameplayFor(chunk: _chunks[_previousChunk]);
             _previousChunk = CurrentCameraChunk().GetComponent<ChunkView>().Id;
         }
 
-        public void Initialize()
+        private bool HasCameraGotANewChunk() =>
+            _previousChunk == CurrentCameraChunk().GetComponent<ChunkView>().Id;
+
+        private void MoveCamera()
         {
-            CreateChunks();
+            var mainCameraTransform = mainCamera.transform;
+            var cameraPosition = mainCameraTransform.position;
+            mainCameraTransform.position = new Vector3(_newCameraPositionXAxis, cameraPosition.y, cameraPosition.z);
+        }
+
+        private GameObject CurrentCameraChunk() => 
+            _chunks.First(HasCollided);
+
+        private bool HasCollided(GameObject chunk)
+        {
+            var chunkPosition = chunk.transform.position;
+            var chunkMinX = chunkPosition.x - levelGenerator.Width * 0.5f;
+            var chunkMaxX = chunkPosition.x + levelGenerator.Width * 0.5f;
+            var cameraMinX = _newCameraPositionXAxis - 17.5f * 0.5f;
+            return HasCollidedWithEndOfCamera(chunkMinX, chunkMaxX, cameraMinX);
+        }
+
+        private bool HasCollidedWithEndOfCamera(float colliderMinX, float colliderMaxX, float cameraMinX) =>
+            colliderMinX <
+            cameraMinX &&
+            colliderMaxX >=
+            cameraMinX;
+
+        private void SetUp()
+        {
             _newPlayerPositionXAxis = player.position.x;
+            _newCameraPositionXAxis = mainCamera.transform.position.x;
             gameObject.SetActive(true);
             _previousChunk = 0;
-            GamePlayStart(playerInput, playerView);
         }
 
         private void CreateChunks()
@@ -76,7 +122,7 @@ namespace Code.Views
 
         private GameObject InitializeChunkContainersWithFirstChunks()
         {
-            var go = Instantiate(chunkContainer, transform); 
+            var go = Instantiate(chunkContainer, transform);
             AddChunkToContainer(go);
             return go;
         }
@@ -91,7 +137,7 @@ namespace Code.Views
             chunk.transform.position =
                 new Vector3(chunk.transform.position.x + levelGenerator.TotalWidth,
                     startPositionVertical);
-            Destroy(chunk.transform.GetChild(0).gameObject); 
+            Destroy(chunk.transform.GetChild(0).gameObject);
             AddChunkToContainer(chunk);
         }
     }

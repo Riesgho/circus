@@ -1,4 +1,5 @@
 ﻿using System;
+using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +20,11 @@ namespace Code.Views
         public void Hide()
         {
             startGameHud.SetActive(false);
+        }
+
+        public void Show()
+        {
+            startGameHud.SetActive(true);
         }
     }
 }

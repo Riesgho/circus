@@ -26,5 +26,10 @@ namespace Code.Presenters
         {
             _isGrounded = isGrounded;
         }
+
+        public void Dismiss()
+        {
+            _view.Reset();
+        }
     }
 }

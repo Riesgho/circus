@@ -14,5 +14,10 @@ namespace Code.Presenters
             _actionActivated = actionActivated;
             _view.Action = () => { _actionActivated.OnNext(Unit.Default); };
         }
+
+        public void Dismiss()
+        {
+            
+        }
     }
 }
