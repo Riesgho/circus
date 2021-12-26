@@ -13,26 +13,28 @@ namespace Code.Views
     {
         public Action<PlayerInput, PlayerView> GamePlayStart { get; set; }
         public Action GamePlayFinish { get; set; }
-        
-        [SerializeField] private Transform player;
+        public Action<float> MovePlayer { get; set; }
         [SerializeField] private PlayerInput playerInput;
         [SerializeField] private PlayerView playerView;
         [SerializeField] private LevelGenerator levelGenerator;
-        [SerializeField] private float startPositionHorizontal = -6.5f;
-        [SerializeField] private float startPositionVertical = 0f;
+        [SerializeField] private float chunkStartPositionHorizontal = -6.5f;
+        [SerializeField] private float chunkStartPositionVertical = 0f;
         [SerializeField] private Camera mainCamera;
         [SerializeField] private GameObject chunkContainer;
         [Range(0.0f, 10f), SerializeField] private float moveHorizontalValue;
-        private float _newPlayerPositionXAxis;
         private float _newCameraPositionXAxis;
         private List<GameObject> _chunks;
         private int _previousChunk;
+        private PlayerView playerGo;
+        public List<Actionable> Actionables { get; private set; }
 
         public void Initialize()
         {
+            Actionables = new List<Actionable>();
             CreateChunks();
             SetUp();
-            GamePlayStart(playerInput, playerView);
+            playerGo = Instantiate(playerView, transform);
+            GamePlayStart(playerInput, playerGo);
         }
 
         public void Finish()
@@ -40,6 +42,7 @@ namespace Code.Views
             gameObject.SetActive(false);
             ClearChunks();
             mainCamera.transform.position = new Vector3(0, 0, -10);
+            Destroy(playerGo.gameObject);
             GamePlayFinish();
         }
 
@@ -50,24 +53,22 @@ namespace Code.Views
 
         private void Update()
         {
-            var position = player.position;
             var cameraPosition = mainCamera.transform.position;
             var moveAmount = moveHorizontalValue * Time.deltaTime;
-            _newPlayerPositionXAxis = position.x + moveAmount;
-            _newCameraPositionXAxis = cameraPosition.x + moveAmount;
-            if (HasPlayerCollided(position)) 
+            MovePlayer(moveAmount);
+            _newCameraPositionXAxis =  cameraPosition.x + moveAmount * 1.1f;
+            if (HasPlayerCollidedHorizontally(playerGo.transform.position.x)) 
                 Finish();
-        }
+        } 
 
-        private bool HasPlayerCollided(Vector3 position) => 
-            HasCollidedWithEndOfCamera(position.x, position.x+0.5f, _newCameraPositionXAxis - 17.5f * 0.5f);
+        private bool HasPlayerCollidedHorizontally(float position) => 
+            HasCollidedWithEndOfCamera(position, position+0.5f, _newCameraPositionXAxis - 17.5f * 0.5f);
 
         private void FixedUpdate()
         {
-            player.position = new Vector2(_newPlayerPositionXAxis, player.position.y);
             MoveCamera();
             if (HasCameraGotANewChunk()) return;
-            UpdateGameplayFor(chunk: _chunks[_previousChunk]);
+            UpdateGameplayForChunk(chunk: _chunks[_previousChunk]);
             _previousChunk = CurrentCameraChunk().GetComponent<ChunkView>().Id;
         }
 
@@ -101,7 +102,6 @@ namespace Code.Views
 
         private void SetUp()
         {
-            _newPlayerPositionXAxis = player.position.x;
             _newCameraPositionXAxis = mainCamera.transform.position.x;
             gameObject.SetActive(true);
             _previousChunk = 0;
@@ -115,7 +115,7 @@ namespace Code.Views
             {
                 var chunk = _chunks[i];
                 chunk.transform.position =
-                    new Vector3(startPositionHorizontal + (i * levelGenerator.Width), startPositionVertical);
+                    new Vector3(chunkStartPositionHorizontal + (i * levelGenerator.Width), chunkStartPositionVertical);
                 chunk.GetComponent<ChunkView>().Id = i;
             }
         }
@@ -130,13 +130,16 @@ namespace Code.Views
         private void AddChunkToContainer(GameObject container)
         {
             Instantiate(levelGenerator.GetChunk(), container.transform);
+            if (container.GetComponent<ChunkView>().HasActionable())
+                Actionables.Add(container.GetComponentInChildren<Actionable>());
         }
 
-        private void UpdateGameplayFor(GameObject chunk)
+        private void UpdateGameplayForChunk(GameObject chunk)
         {
             chunk.transform.position =
                 new Vector3(chunk.transform.position.x + levelGenerator.TotalWidth,
-                    startPositionVertical);
+                    chunkStartPositionVertical);
+            Actionables.Remove(chunk.GetComponentInChildren<Actionable>());
             Destroy(chunk.transform.GetChild(0).gameObject);
             AddChunkToContainer(chunk);
         }

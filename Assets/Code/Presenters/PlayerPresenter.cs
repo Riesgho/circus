@@ -1,4 +1,5 @@
-﻿using Code.Views;
+﻿using System.Collections.Generic;
+using Code.Views;
 using UniRx;
 
 namespace Code.Presenters
@@ -6,20 +7,28 @@ namespace Code.Presenters
     public class PlayerPresenter
     {
         private readonly PlayerView _view;
-        private readonly ISubject<Unit> _actionActivated;
+        private readonly ISubject<float> _actionActivated;
+        private readonly GamePlayView _gamePlayView;
         private bool _isGrounded;
 
-        public PlayerPresenter(PlayerView view, ISubject<Unit> actionActivated)
+        public PlayerPresenter(PlayerView view, ISubject<float> actionActivated, GamePlayView gamePlayView)
         {
             _view = view;
             _view.IsGrounded = SetGrounded;
             _actionActivated = actionActivated;
-            _actionActivated.Subscribe(_=>Jump());
+            _gamePlayView = gamePlayView;
+            _gamePlayView.MovePlayer = Move;
+            _actionActivated.Subscribe(Jump);
         }
 
-        private  void Jump()
+        private void Move(float amount)
         {
-            if(_isGrounded) _view.Jump();
+            _view.Move(amount);
+        }
+
+        private  void Jump(float power)
+        {
+            if(_isGrounded) _view.Jump(power);
         }
 
         private void SetGrounded(bool isGrounded)

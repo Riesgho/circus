@@ -15,5 +15,8 @@ namespace Code.Views
         {
         
         }
+
+        public bool HasActionable() => 
+            GetComponentInChildren<Actionable>() != null;
     }
 }

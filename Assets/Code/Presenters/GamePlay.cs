@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Code.Views;
 using UniRx;
 
@@ -29,11 +30,11 @@ namespace Code.Presenters
             _gameFinished.OnNext(Unit.Default);
         }
 
-        public void GamePlayStart(PlayerInput playerInput, PlayerView playerView)
+        private void GamePlayStart(PlayerInput playerInput, PlayerView playerView)
         {
-            var actionActivated = new Subject<Unit>();
+            var actionActivated = new Subject<float>();
             _playerInputPresenter = new PlayerInputPresenter(playerInput, actionActivated);
-            _playerPresenter = new PlayerPresenter(playerView, actionActivated);
+            _playerPresenter = new PlayerPresenter(playerView, actionActivated, _view);
         }
     }
 }
