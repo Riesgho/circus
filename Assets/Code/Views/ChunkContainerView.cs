@@ -4,7 +4,12 @@ namespace Code.Views
 {
     public class ChunkView : MonoBehaviour
     {
+        [SerializeField] private BaseActionableView _actionableView;
+        [SerializeField] private bool _hasActionable;
         public int Id { get; set; }
+
+        public Actionable Actionable => _actionableView;
+
         // Start is called before the first frame update
         void Start()
         {
@@ -16,7 +21,6 @@ namespace Code.Views
         
         }
 
-        public bool HasActionable() => 
-            GetComponentInChildren<Actionable>() != null;
+        public bool HasActionable() => _hasActionable;
     }
 }
