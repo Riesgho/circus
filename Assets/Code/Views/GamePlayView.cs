@@ -14,6 +14,8 @@ namespace Code.Views
         public Action<PlayerInput, PlayerView> GamePlayStart { get; set; }
         public Action GamePlayFinish { get; set; }
         public Action<float> MovePlayer { get; set; }
+        public Action<Actionable>AttachTo { get; set; }
+        
         [SerializeField] private PlayerInput playerInput;
         [SerializeField] private PlayerView playerView;
         [SerializeField] private LevelGenerator levelGenerator;
@@ -31,7 +33,6 @@ namespace Code.Views
         public void Initialize()
         {
             Actionables = new List<Actionable>();
-            CreateChunks();
             SetUp();
             playerGo = Instantiate(playerView, transform);
             GamePlayStart(playerInput, playerGo);
@@ -69,11 +70,11 @@ namespace Code.Views
             MoveCamera();
             if (HasCameraGotANewChunk()) return;
             UpdateGameplayForChunk(chunk: _chunks[_previousChunk]);
-            _previousChunk = CurrentCameraChunk().GetComponent<ChunkView>().Id;
+            _previousChunk = CurrentCameraChunk().GetComponent<ChunkContainerView>().Id;
         }
 
         private bool HasCameraGotANewChunk() =>
-            _previousChunk == CurrentCameraChunk().GetComponent<ChunkView>().Id;
+            _previousChunk == CurrentCameraChunk().GetComponent<ChunkContainerView>().Id;
 
         private void MoveCamera()
         {
@@ -107,7 +108,7 @@ namespace Code.Views
             _previousChunk = 0;
         }
 
-        private void CreateChunks()
+        public void CreateChunks()
         {
             _chunks = Enumerable.Range(0, levelGenerator.AmountOfChunks)
                 .Select(_ => InitializeChunkContainersWithFirstChunks()).ToList();
@@ -116,7 +117,7 @@ namespace Code.Views
                 var chunk = _chunks[i];
                 chunk.transform.position =
                     new Vector3(chunkStartPositionHorizontal + (i * levelGenerator.Width), chunkStartPositionVertical);
-                chunk.GetComponent<ChunkView>().Id = i;
+                chunk.GetComponent<ChunkContainerView>().Id = i;
             }
         }
 
@@ -129,9 +130,10 @@ namespace Code.Views
 
         private void AddChunkToContainer(GameObject container)
         {
-            Instantiate(levelGenerator.GetChunk(), container.transform);
-            if (container.GetComponent<ChunkView>().HasActionable())
-                Actionables.Add(container.GetComponentInChildren<Actionable>());
+            var go = Instantiate(levelGenerator.GetChunk(), container.transform);
+            container.GetComponent<ChunkContainerView>().Chunk = go.GetComponent<ChunkView>();
+            if (container.GetComponent<ChunkContainerView>().Chunk.HasActionable())
+                AttachTo(container.GetComponent<ChunkContainerView>().Chunk.Actionable);
         }
 
         private void UpdateGameplayForChunk(GameObject chunk)
@@ -139,7 +141,7 @@ namespace Code.Views
             chunk.transform.position =
                 new Vector3(chunk.transform.position.x + levelGenerator.TotalWidth,
                     chunkStartPositionVertical);
-            Actionables.Remove(chunk.GetComponentInChildren<Actionable>());
+        
             Destroy(chunk.transform.GetChild(0).gameObject);
             AddChunkToContainer(chunk);
         }

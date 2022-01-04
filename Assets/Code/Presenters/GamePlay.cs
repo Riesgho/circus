@@ -21,6 +21,12 @@ namespace Code.Presenters
             _gameFinished = gameFinished;
             _view.GamePlayStart = GamePlayStart;
             _view.GamePlayFinish = GamePlayFinish;
+            _view.AttachTo = AttachTo;
+        }
+
+        private void AttachTo(Actionable actionable)
+        {
+            actionable.Attach(_playerPresenter);
         }
 
         private void GamePlayFinish()
@@ -35,6 +41,7 @@ namespace Code.Presenters
             var actionActivated = new Subject<float>();
             _playerInputPresenter = new PlayerInputPresenter(playerInput, actionActivated);
             _playerPresenter = new PlayerPresenter(playerView, actionActivated, _view);
+            _view.CreateChunks();
         }
     }
 }

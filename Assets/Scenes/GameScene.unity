@@ -813,7 +813,7 @@ MonoBehaviour:
   mainCamera: {fileID: 519420031}
   chunkContainer: {fileID: 8612762908263505907, guid: 2c88ae4aeb9c24529a98de2e25f030f1,
     type: 3}
-  moveHorizontalValue: 3
+  moveHorizontalValue: 1
 --- !u!4 &1865530927
 Transform:
   m_ObjectHideFlags: 0

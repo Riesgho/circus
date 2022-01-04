@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 399836477408652766}
+  - component: {fileID: -4373551076322862761}
   m_Layer: 9
   m_Name: BaseChunkSize8
   m_TagString: Untagged
@@ -31,6 +32,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-4373551076322862761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262850490566902269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de826eef87eb437584f97340615b6d32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _actionableView: {fileID: 0}
+  _hasActionable: 0
 --- !u!1001 &6257159669210016976
 PrefabInstance:
   m_ObjectHideFlags: 0

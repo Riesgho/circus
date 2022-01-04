@@ -1,18 +1,23 @@
 using System;
+using Code.Presenters;
 using UnityEngine;
 
 namespace Code.Views
 {
-    public class TrampolineView : MonoBehaviour, Actionable
+    public class TrampolineView : BaseActionableView
     {
-        public void Execute()
-        {
-           
-        }
-    }
+        private PlayerPresenter _playerPresenter;
 
-    public interface Actionable
-    {
-        void Execute();
+        public override void Execute()
+        {
+            _playerPresenter.TrampolineJump();
+        }
+
+        public override void Attach(PlayerPresenter playerPresenter)
+        {
+            _playerPresenter = playerPresenter;
+        }
+        
     }
+    
 }

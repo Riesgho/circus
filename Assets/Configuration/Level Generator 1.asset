@@ -16,5 +16,7 @@ MonoBehaviour:
   - {fileID: 8406682308277941804, guid: db76fd5312adf437892454bf1bdd1071, type: 3}
   - {fileID: 8406682308277941804, guid: 6373e3eef1c174ea69c18bdc50636a1f, type: 3}
   - {fileID: 8406682308277941804, guid: cff56a1a393fb4a958befae5d4e80054, type: 3}
+  - {fileID: 8406682308277941804, guid: dd7959ef7966442bf8df2ef5863c1547, type: 3}
+  - {fileID: 8406682308277941804, guid: e2891704e382c41dd8066eaf7fa7f06e, type: 3}
   chunkWidth: 8
   amountOfChunks: 4

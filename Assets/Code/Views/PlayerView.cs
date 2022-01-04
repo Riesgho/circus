@@ -19,9 +19,9 @@ namespace Code.Views
 
         public Action<bool> IsGrounded { get; set; }
 
-        public void Jump(float power)
+        public void Jump(float powerX, float powerY)
         {
-            body.AddForce(new Vector2(jumpForce.x * power * 0.8f, jumpForce.y * (1 + power * 0.2f)),
+            body.AddForce(new Vector2(jumpForce.x * powerX, jumpForce.y * (1 + powerY)),
                 ForceMode2D.Impulse);
         }
 
